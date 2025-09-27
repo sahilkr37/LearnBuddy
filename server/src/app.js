@@ -45,8 +45,21 @@ app.post('/register', async (req, res) => {
                 return res.status(400).json({ error: `Skill too short/long: ${skill}` });
             }
         }
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newUser = new User(req.body);
+        const newUser = new User({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            dateOfBirth,
+            gender,
+            role,
+            bio,
+            skillsKnown,
+            skillsWantToLearn,
+            profile
+        });
         await newUser.save()
 
         res.status(201).json({
