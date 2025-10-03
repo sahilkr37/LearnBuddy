@@ -1,45 +1,23 @@
 import express from 'express'
 import User from '../models/userSchema.js'
 import bcrypt from 'bcrypt'
-import validator from "validator";
+import { validateUserData } from '../utils/validation.js'
 
 const authRouter = express.Router()
 
 authRouter.post('/register', async (req, res) => {
-    const { firstName,
-        lastName,
-        email,
-        password,
-        dateOfBirth,
-        gender,
-        role,
-        bio,
-        skillsKnown,
-        skillsWantToLearn,
-        profile } = req.body
 
     try {
+        const { isValid, errors } = validateUserData(req.body);
+
+        if (!isValid) {
+            return res.status(400).json({ errors });
+        }
+        const { firstName, lastName, email, password, dateOfBirth, gender, role, bio, skillsKnown, skillsWantToLearn, profile } = req.body;
+
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ error: "Email already in use" });
-        }
-
-        if (!validator.isEmail(email)) {
-            return res.status(400).json({ error: "Invalid email format" });
-        }
-
-        if (!validator.isStrongPassword(password, { minLength: 8, minNumbers: 1, minSymbols: 1 })) {
-            return res.status(400).json({ error: "Password must be at least 8 characters long and include a number & symbol" });
-        }
-        for (let skill of skillsKnown) {
-            if (!validator.isLength(skill, { min: 2, max: 30 })) {
-                return res.status(400).json({ error: `Skill too short/long: ${skill}` });
-            }
-        }
-        for (let skill of skillsWantToLearn) {
-            if (!validator.isLength(skill, { min: 2, max: 30 })) {
-                return res.status(400).json({ error: `Skill too short/long: ${skill}` });
-            }
         }
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -71,8 +49,6 @@ authRouter.post('/login', async (req, res) => {
     const { email, password } = req.body
     try {
         const user = await User.findOne({ email })
-        console.log("Entered:", password)
-        console.log("Stored:", user.password)
 
         if (!user) {
             return res.status(400).json({ error: "Invalid credentials" });
@@ -108,5 +84,16 @@ authRouter.post('/login', async (req, res) => {
     }
 
 })
+
+authRouter.post('/logout', (req, res) => {
+    try {
+        res.clearCookie('token')
+        res.json({ message: "Logout successfully" })
+    } catch (error) {
+        res.status(400).json({ message: "Can't logout" })
+    }
+})
+
+
 
 export default authRouter
