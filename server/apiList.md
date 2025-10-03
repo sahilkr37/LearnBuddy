@@ -15,10 +15,13 @@
 
 ## connectionRequestRouter
 
-- POST /request/send/interested/:userId 
-- POST /request/send/ignored/:userId
-- POST /request/review/accepted/:requestId
-- POST /request/review/rejected/:requestId
+<!-- status-ignored/interested -->
+
+- POST /request/send/:status/:userId
+
+<!-- status-accepted/rejected -->
+
+- POST /request/review/:status/:requestId
 
 ## userRouter
 

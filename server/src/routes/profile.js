@@ -38,6 +38,7 @@ profileRouter.put('/profile/edit', verifyToken, async (req, res) => {
             res.status(404).json({ error: error.message })
         }
     } catch (err) {
+        console.log(err)
         return res.status(403).json({ error: "Invalid or expired token" });
     }
 })

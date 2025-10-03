@@ -3,11 +3,15 @@ import mongoose from "mongoose";
 const connectionRequest = new mongoose.Schema({
     fromUserId: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true
+        ref: "User",
+        required: true,
+
     },
     toUserId: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true
+        ref: "User",
+        required: true,
+
     },
     status: {
         type: String,
@@ -19,6 +23,7 @@ const connectionRequest = new mongoose.Schema({
     }
 
 }, { timestamps: true })
+connectionRequest.index({ fromUserId: 1, toUserId: 1 });
 
 const ConnectionRequest = mongoose.model('ConnectionRequest', connectionRequest)
 export default ConnectionRequest
