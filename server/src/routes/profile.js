@@ -17,31 +17,44 @@ profileRouter.get('/profile/view', verifyToken, async (req, res) => {
     }
 })
 
-profileRouter.put('/profile/edit', verifyToken, async (req, res) => {
-
+profileRouter.patch('/profile/edit', verifyToken, async (req, res) => {
     try {
-        const user = await User.findById(req.user._id)
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
-        const allowedUpdates = ['firstName', 'lastName', 'dateOfBirth', 'gender', 'bio', 'profilePhoto', 'skillsKnown', 'skillsWantToLearn'];
-        let updateData = {}
+        const userId = req.user._id;
+        const allowedUpdates = [
+            'firstName',
+            'lastName',
+            'dateOfBirth',
+            'gender',
+            'bio',
+            'profilePhoto',
+            'skillsKnown',
+            'skillsWantToLearn'
+        ];
+
+        let updateData = {};
         allowedUpdates.forEach(field => {
-            if ((field in req.body)) {
+            if (req.body[field] !== undefined) {
                 updateData[field] = req.body[field];
             }
-        })
-        try {
-            const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true })
-            res.json(updatedUser)
-        } catch (error) {
-            res.status(404).json({ error: error.message })
+        });
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ error: "User not found" });
         }
-    } catch (err) {
-        console.log(err)
-        return res.status(403).json({ error: "Invalid or expired token" });
+
+        res.json(updatedUser);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
     }
-})
+});
+
 
 profileRouter.delete('/profile/delete', verifyToken, async (req, res) => {
     try {
