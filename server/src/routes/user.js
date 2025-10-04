@@ -79,5 +79,41 @@ userRouter.get('/feed/sameTech', verifyToken, async (req, res) => {
     }
 
 })
+userRouter.get('/feed/skillSwap', verifyToken, async (req, res) => {
+    try {
+        const loggedInUserId = req.user._id
+        const requests = await ConnectionRequest.find({
+            $or: [
+                { fromUserId: loggedInUserId },
+                { toUserId: loggedInUserId }
+            ]
+        }).select('fromUserId toUserId')
 
+        const blockedUserIds = new Set();
+        requests.forEach(r => {
+            blockedUserIds.add(r.fromUserId.toString());
+            blockedUserIds.add(r.toUserId.toString());
+        })
+        blockedUserIds.add(loggedInUserId.toString())
+
+        const user = await User.findById(loggedInUserId).select('skillsKnown skillsWantToLearn')
+        if (!user) {
+            return res.status(400).json({ error: "User not found" })
+        }
+
+        const users = await User.find({
+            _id: { $nin: Array.from(blockedUserIds) },
+            $and: [
+                { skillsKnown: { $in: user.skillsWantToLearn } },
+                { skillsWantToLearn: { $in: user.skillsKnown } }
+            ]
+        }).select('firstName lastName email skillsKnown skillsWantToLearn');
+        res.json(users)
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
+    }
+
+})
 export default userRouter 
